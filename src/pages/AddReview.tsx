@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
-import { MapPin, Star, Shield, Camera, Plus } from 'lucide-react'
+import { MapPin, Star, Shield, Camera, Plus, Search } from 'lucide-react'
 
 interface ReviewForm {
   placeName: string
@@ -21,7 +21,7 @@ const AddReview = () => {
   const [safetyScore, setSafetyScore] = useState(0)
   const [images, setImages] = useState<File[]>([])
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<ReviewForm>()
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<ReviewForm>()
 
   const categories = [
     'Cafe/Restaurant',
@@ -86,6 +86,21 @@ const AddReview = () => {
     }
   }
 
+  const handleLookForSafetyReviews = () => {
+    const placeName = watch('placeName')
+    const location = watch('location')
+    
+    if (!placeName && !location) {
+      alert('Please enter a place name or location first to search for safety reviews.')
+      return
+    }
+    
+    // In a real app, this would search your database or external APIs
+    // For now, we'll show a mock search
+    const searchQuery = `${placeName || ''} ${location || ''}`.trim()
+    alert(`Searching for safety reviews about "${searchQuery}"...\n\nThis feature would search through:\n• Existing user reviews\n• Reddit discussions\n• Travel forums\n• Government travel advisories\n• Recent news articles\n\nResults would show safety insights, recent incidents, and community recommendations.`)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pt-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -107,7 +122,17 @@ const AddReview = () => {
         >
           {/* Basic Information */}
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Basic Information</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900">Basic Information</h2>
+              <button
+                type="button"
+                onClick={handleLookForSafetyReviews}
+                className="inline-flex items-center px-4 py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-800 font-medium rounded-lg transition-colors duration-200"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Look for Safety Reviews
+              </button>
+            </div>
             
             <div className="grid md:grid-cols-2 gap-6">
               <div>
