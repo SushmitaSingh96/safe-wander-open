@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { MapPin, Shield, Users, TrendingUp, Star, Coffee, Building, Camera } from 'lucide-react'

@@ -1,10 +1,7 @@
-import React from 'react'
-import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { MapPin, Star, Shield, Clock, Users, Camera, ThumbsUp, Flag } from 'lucide-react'
 
 const PlaceDetails = () => {
-  const { id } = useParams()
 
   // Mock data - in real app, this would be fetched based on the ID
   const place = {

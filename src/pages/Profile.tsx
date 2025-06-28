@@ -1,4 +1,3 @@
-import React from 'react'
 import { motion } from 'framer-motion'
 import { User, MapPin, Star, Shield, Calendar, Award, TrendingUp } from 'lucide-react'
 
