@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { MapPin, Star, Shield, Clock, Users, Camera, ThumbsUp, Flag } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const PlaceDetails = () => {
 
@@ -32,15 +32,13 @@ const PlaceDetails = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await fetch(
-          `${BACKEND_URL}/safety-reviews?placeName=${encodeURIComponent(place.name)}&location=${encodeURIComponent(place.location)}`
-        );
+        const res = await fetch(`${BACKEND_URL}/reviews`);
         const data = await res.json();
         setReviews(data.reviews || []);
       } catch (error) {
         console.error("Failed to fetch reviews:", error);
       }
-    }
+    };
 
     fetchReviews();
   }, []);
@@ -210,7 +208,7 @@ const PlaceDetails = () => {
                 <p className="text-gray-700 mb-4">{review.review}</p>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {review.tags.map((tag, tagIndex) => (
+                  {review.tags.map((tag: string, tagIndex: number) => (
                     <span
                       key={tagIndex}
                       className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"

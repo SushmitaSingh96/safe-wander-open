@@ -1,12 +1,46 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Filter, MapPin, Star, Shield, Clock } from 'lucide-react'
 import MapView from '../components/MapView'
+import axios from 'axios'
 
 const Explore = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  const [dbPlaces, setDbPlaces] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/reviews`)
+        const data = response.data
+
+        if (!data.reviews || !Array.isArray(data.reviews)) {
+          console.warn('No reviews found or unexpected response:', data)
+          return
+        }
+
+        const reviews = data.reviews.map((review: any, index: number) => ({
+          id: review.id,
+          name: review.placeName,
+          category: review.category,
+          location: review.location,
+          rating: review.rating,
+          safetyScore: review.safetyScore,
+          image: review.image_url || 'https://images.pexels.com/photos/161401/fushimi-inari-taisha-shrine-kyoto-japan-temple-161401.jpeg?auto=compress&cs=tinysrgb&w=400',
+          tags: JSON.parse(review.tags || '[]'),
+          lastUpdated: new Date(review.created_at).toLocaleDateString(),
+          coordinates: [35.6895 + index * 0.001, 139.6917 + index * 0.001] as [number, number]
+        }))
+        setDbPlaces(reviews)
+      } catch (error) {
+        console.error('Error fetching reviews:', error)
+      }
+    }
+
+    fetchReviews()
+  }, [])
 
   const categories = [
     { id: 'all', name: 'All Places' },
@@ -65,7 +99,8 @@ const Explore = () => {
       tags: ['Spacious', 'Good for meetings', 'Safe area'],
       lastUpdated: '3 hours ago',
       coordinates: [35.6434, 139.6982] as [number, number]
-    }
+    },
+    ...dbPlaces
   ]
 
   const filteredPlaces = places.filter(place => {
@@ -199,7 +234,7 @@ const Explore = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {place.tags.map((tag, tagIndex) => (
+                    {place.tags.map((tag: string, tagIndex: number) => (
                       <span
                         key={tagIndex}
                         className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
