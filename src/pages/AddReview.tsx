@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { MapPin, Star, Shield, Camera, Plus, Search } from 'lucide-react'
+import { fetchSafetyReviews } from "../utils/api";
 
 interface ReviewForm {
   placeName: string
@@ -20,6 +21,8 @@ const AddReview = () => {
   const [rating, setRating] = useState(0)
   const [safetyScore, setSafetyScore] = useState(0)
   const [images, setImages] = useState<File[]>([])
+  const [aiSuggestedReview, setAiSuggestedReview] = useState('');
+  const [showSuggestedReviewBox, setShowSuggestedReviewBox] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<ReviewForm>()
 
@@ -68,7 +71,8 @@ const AddReview = () => {
       rating,
       safetyScore,
       tags: selectedTags,
-      images
+      images,
+      review: data.review || aiSuggestedReview // fallback to suggested review
     }
     console.log('Review submitted:', reviewData)
     // Here you would typically send the data to your backend
@@ -78,6 +82,8 @@ const AddReview = () => {
     setRating(0)
     setSafetyScore(0)
     setImages([])
+    setAiSuggestedReview('');
+    setShowSuggestedReviewBox(false);
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,20 +92,30 @@ const AddReview = () => {
     }
   }
 
-  const handleLookForSafetyReviews = () => {
-    const placeName = watch('placeName')
-    const location = watch('location')
-    
+  const handleLookForSafetyReviews = async () => {
+    const placeName = watch('placeName');
+    const location = watch('location');
+
     if (!placeName && !location) {
-      alert('Please enter a place name or location first to search for safety reviews.')
-      return
+      alert('Please enter a place name or location first to search for safety reviews.');
+      return;
     }
-    
-    // In a real app, this would search your database or external APIs
-    // For now, we'll show a mock search
-    const searchQuery = `${placeName || ''} ${location || ''}`.trim()
-    alert(`Searching for safety reviews about "${searchQuery}"...\n\nThis feature would search through:\n• Existing user reviews\n• Reddit discussions\n• Travel forums\n• Government travel advisories\n• Recent news articles\n\nResults would show safety insights, recent incidents, and community recommendations.`)
-  }
+
+    const query = `${placeName || ''} ${location || ''}`.trim();
+
+    try {
+      const reviews = await fetchSafetyReviews(query);
+      if (reviews.length > 0) {
+        setAiSuggestedReview(reviews.slice(0, 5).join('\n\n'));
+        setShowSuggestedReviewBox(true);
+      } else {
+        alert('No safety reviews found.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error fetching safety reviews.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-8">
@@ -270,6 +286,32 @@ const AddReview = () => {
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">Your Review</h2>
             
             <div className="space-y-6">
+              {showSuggestedReviewBox && (
+                <div className="mb-4 p-4 border border-blue-300 bg-blue-50 rounded-md">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-semibold text-blue-800">AI Suggested Review</h3>
+                    <button
+                      type="button"
+                      className="text-sm text-red-600 hover:underline"
+                      onClick={() => {
+                        setAiSuggestedReview('');
+                        setShowSuggestedReviewBox(false);
+                      }}
+                    >
+                      Discard
+                    </button>
+                  </div>
+                  <textarea
+                    value={aiSuggestedReview}
+                    onChange={(e) => setAiSuggestedReview(e.target.value)}
+                    className="w-full p-2 border rounded-md text-sm"
+                    rows={5}
+                  />
+                  <div className="mt-2 text-sm text-gray-600">
+                    You can edit this suggestion or discard it.
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Detailed Review *
@@ -372,6 +414,8 @@ const AddReview = () => {
                 setRating(0)
                 setSafetyScore(0)
                 setImages([])
+                setAiSuggestedReview('');
+                setShowSuggestedReviewBox(false);
               }}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
