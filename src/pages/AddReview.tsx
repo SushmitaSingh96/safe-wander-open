@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Star, Shield, Camera, Plus, Search } from 'lucide-react'
+import { supabase } from '../utils/supabaseClient'
 import { fetchSafetyReviews } from "../utils/api";
+import { submitReview } from '../utils/api'
 
 interface ReviewForm {
   placeName: string
@@ -12,8 +15,9 @@ interface ReviewForm {
   safetyScore: number
   review: string
   tags: string[]
-  visitTime: string
+  lastVisitTime: string
   wouldRecommend: boolean
+  aiSuggestedReview?: string;
 }
 
 const AddReview = () => {
@@ -23,6 +27,8 @@ const AddReview = () => {
   const [images, setImages] = useState<File[]>([])
   const [aiSuggestedReview, setAiSuggestedReview] = useState('');
   const [showSuggestedReviewBox, setShowSuggestedReviewBox] = useState(false);
+  const [isFetchingReview, setIsFetchingReview] = useState(false);
+  const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<ReviewForm>()
 
@@ -65,26 +71,66 @@ const AddReview = () => {
     )
   }
 
-  const onSubmit = (data: ReviewForm) => {
-    const reviewData = {
-      ...data,
-      rating,
-      safetyScore,
-      tags: selectedTags,
-      images,
-      review: data.review || aiSuggestedReview // fallback to suggested review
-    }
-    console.log('Review submitted:', reviewData)
-    // Here you would typically send the data to your backend
-    alert('Review submitted successfully!')
-    reset()
-    setSelectedTags([])
-    setRating(0)
-    setSafetyScore(0)
-    setImages([])
+
+const onSubmit = async (data: ReviewForm) => {
+  let imageUrls: string[] = [];
+
+  if (images.length > 0) {
+    const uploads = await Promise.all(
+      images.map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const { data: uploadedFileData, error } = await supabase.storage
+          .from('review-images')
+          .upload(fileName, file);
+
+        if (error) {
+          console.error('Error uploading image:', error);
+          return null;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('review-images')
+          .getPublicUrl(fileName);
+
+        if (!publicUrlData?.publicUrl) {
+          console.error('Failed to get public URL:', publicUrlData);
+          return null;
+        }
+
+        return publicUrlData.publicUrl;
+      })
+    );
+
+    imageUrls = uploads.filter((url): url is string => Boolean(url));
+  }
+
+  const reviewData = {
+    ...data,
+    rating,
+    safetyScore,
+    tags: selectedTags,
+    image_url: imageUrls[0] || null,
+    review: data.review || aiSuggestedReview,
+    aiSuggestedReview: aiSuggestedReview || '',
+  };
+
+  try {
+    await submitReview(reviewData);
+    alert('Review submitted successfully!');
+    reset();
+    setSelectedTags([]);
+    setRating(0);
+    setSafetyScore(0);
+    setImages([]);
     setAiSuggestedReview('');
     setShowSuggestedReviewBox(false);
+    navigate('/');
+  } catch (error) {
+    console.error('Submission failed:', error);
+    alert('There was a problem submitting your review.');
   }
+}
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -101,10 +147,10 @@ const AddReview = () => {
       return;
     }
 
-    const query = `${placeName || ''} ${location || ''}`.trim();
 
+    setIsFetchingReview(true);
     try {
-      const reviews = await fetchSafetyReviews(query);
+      const reviews = await fetchSafetyReviews(placeName, location);
       if (reviews.length > 0) {
         setAiSuggestedReview(reviews.slice(0, 5).join('\n\n'));
         setShowSuggestedReviewBox(true);
@@ -114,6 +160,8 @@ const AddReview = () => {
     } catch (error) {
       console.error(error);
       alert('Error fetching safety reviews.');
+    } finally {
+      setIsFetchingReview(false);
     }
   };
 
@@ -144,9 +192,10 @@ const AddReview = () => {
                 type="button"
                 onClick={handleLookForSafetyReviews}
                 className="inline-flex items-center px-4 py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-800 font-medium rounded-lg transition-colors duration-200"
+                disabled={isFetchingReview}
               >
                 <Search className="w-4 h-4 mr-2" />
-                Look for Safety Reviews
+                {isFetchingReview ? "Looking..." : "Look for Safety Reviews"}
               </button>
             </div>
             
@@ -332,7 +381,7 @@ const AddReview = () => {
                   When did you visit?
                 </label>
                 <select
-                  {...register('visitTime')}
+                  {...register('lastVisitTime')}
                   className="input-field"
                 >
                   <option value="">Select time period</option>

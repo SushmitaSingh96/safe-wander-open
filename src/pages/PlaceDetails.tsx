@@ -1,5 +1,8 @@
 import { motion } from 'framer-motion'
 import { MapPin, Star, Shield, Clock, Users, Camera, ThumbsUp, Flag } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
 const PlaceDetails = () => {
 
@@ -24,38 +27,23 @@ const PlaceDetails = () => {
     lastUpdated: '2 hours ago'
   }
 
-  const reviews = [
-    {
-      id: 1,
-      author: 'Sarah M.',
-      rating: 5,
-      safetyScore: 9.5,
-      date: '2024-01-15',
-      review: 'Perfect spot for solo work sessions. The staff is incredibly friendly and the atmosphere is very welcoming. I felt completely safe here even late in the evening. Great WiFi and plenty of power outlets.',
-      helpful: 12,
-      tags: ['Solo-friendly', 'Good WiFi', 'Safe evening']
-    },
-    {
-      id: 2,
-      author: 'Emma L.',
-      rating: 4,
-      safetyScore: 8.8,
-      date: '2024-01-10',
-      review: 'Nice coffee and good location. The place gets quite busy during lunch hours but the staff manages the crowd well. Felt safe throughout my visit.',
-      helpful: 8,
-      tags: ['Busy lunch', 'Good service']
-    },
-    {
-      id: 3,
-      author: 'Lisa K.',
-      rating: 5,
-      safetyScore: 9.0,
-      date: '2024-01-05',
-      review: 'Excellent coffee quality and the baristas are very knowledgeable. The seating area is well-designed for both solo visitors and groups. Highly recommend!',
-      helpful: 15,
-      tags: ['Quality coffee', 'Knowledgeable staff']
+  const [reviews, setReviews] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(
+          `${BACKEND_URL}/safety-reviews?placeName=${encodeURIComponent(place.name)}&location=${encodeURIComponent(place.location)}`
+        );
+        const data = await res.json();
+        setReviews(data.reviews || []);
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error);
+      }
     }
-  ]
+
+    fetchReviews();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-8">
