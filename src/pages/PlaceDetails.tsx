@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { MapPin, Star, Shield, Clock, Users, Camera, ThumbsUp, Flag } from 'lucide-react'
+import { MapPin, Star, Shield, Clock, Users, ThumbsUp, Flag } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
