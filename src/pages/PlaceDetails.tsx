@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { MapPin, Star, Shield, Clock, Users, Camera, ThumbsUp, Flag } from 'lucide-react'
+import { MapPin, Star, Shield, Clock, Users, ThumbsUp, Flag } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
@@ -20,11 +20,7 @@ const PlaceDetails = () => {
     rating: 4.8,
     safetyScore: 9.2,
     totalReviews: 127,
-    images: [
-      'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800',
-      'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
-      'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
-    ],
+    image: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800',
     tags: ['WiFi Available', 'Solo-friendly', 'Well-lit', 'English-speaking staff'],
     hours: 'Mon-Sun: 7:00 AM - 10:00 PM',
     description: 'A popular coffee chain known for its high-quality beans and minimalist aesthetic. This Shibuya location is particularly welcoming to solo travelers.',
@@ -112,7 +108,8 @@ const PlaceDetails = () => {
                 totalReviews: matchingReviews.length,
                 tags: JSON.parse(dbPlace.tags || '[]'),
                 description: dbPlace.review || mockPlace.description,
-                lastUpdated: new Date(dbPlace.created_at).toLocaleDateString()
+                lastUpdated: new Date(dbPlace.created_at).toLocaleDateString(),
+                image: dbPlace.image_url || mockPlace.image
               })
               setReviews(matchingReviews.map((review: any) => ({
                 id: review.id,
@@ -202,35 +199,13 @@ const PlaceDetails = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8"
         >
-          {/* Image Gallery */}
-          <div className="grid md:grid-cols-3 gap-2 h-80">
-            <div className="md:col-span-2">
-              <img
-                src={place.images[0]}
-                alt={place.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="grid grid-rows-2 gap-2">
-              <img
-                src={place.images[1]}
-                alt={place.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="relative">
-                <img
-                  src={place.images[2]}
-                  alt={place.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <div className="flex items-center text-white">
-                    <Camera className="w-5 h-5 mr-2" />
-                    <span className="font-medium">+5 more photos</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Single Image */}
+          <div className="h-80 w-full">
+            <img
+              src={place.image}
+              alt={place.name}
+              className="w-full h-full object-cover"
+            />
           </div>
 
           {/* Place Info */}
