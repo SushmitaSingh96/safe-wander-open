@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Filter, MapPin, Star, Shield, Clock } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import MapView from '../components/MapView'
 import axios from 'axios'
 
@@ -202,53 +203,55 @@ const Explore = () => {
                 transition={{ delay: 0.3 + index * 0.1 }}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
               >
-                <div className="relative">
-                  <img
-                    src={place.image}
-                    alt={place.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-primary-800 text-sm font-medium rounded-full">
-                      {place.category}
-                    </span>
-                  </div>
-                  <div className="absolute top-4 right-4 flex items-center space-x-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
-                    <Shield className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-semibold text-green-600">{place.safetyScore}</span>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{place.name}</h3>
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="font-semibold text-gray-900">{place.rating}</span>
+                <Link to={`/place/${place.id}`} className="block">
+                  <div className="relative">
+                    <img
+                      src={place.image}
+                      alt={place.name}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-primary-800 text-sm font-medium rounded-full">
+                        {place.category}
+                      </span>
+                    </div>
+                    <div className="absolute top-4 right-4 flex items-center space-x-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
+                      <Shield className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-semibold text-green-600">{place.safetyScore}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center text-gray-500 mb-4">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    <span className="text-sm">{place.location}</span>
-                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">{place.name}</h3>
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <span className="font-semibold text-gray-900">{place.rating}</span>
+                      </div>
+                    </div>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {place.tags.map((tag: string, tagIndex: number) => (
-                      <span
-                        key={tagIndex}
-                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                    <div className="flex items-center text-gray-500 mb-4">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span className="text-sm">{place.location}</span>
+                    </div>
 
-                  <div className="flex items-center text-xs text-gray-500">
-                    <Clock className="w-3 h-3 mr-1" />
-                    <span>Updated {place.lastUpdated}</span>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {place.tags.map((tag: string, tagIndex: number) => (
+                        <span
+                          key={tagIndex}
+                          className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Clock className="w-3 h-3 mr-1" />
+                      <span>Updated {place.lastUpdated}</span>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </motion.div>
             ))}
           </motion.div>
