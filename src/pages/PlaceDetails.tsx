@@ -11,13 +11,120 @@ const PlaceDetails = () => {
   const [place, setPlace] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
+  // Fallback data when backend is not available
+  const fallbackPlaces = [
+    {
+      id: 1,
+      name: 'Blue Bottle Coffee',
+      category: 'Cafe',
+      location: 'Shibuya, Tokyo',
+      rating: 4.8,
+      safetyScore: 9.2,
+      totalReviews: 3,
+      images: [
+        'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
+      tags: ['WiFi', 'Solo-friendly', 'Well-lit', 'Great coffee'],
+      hours: 'Mon-Sun: 7:00 AM - 10:00 PM',
+      description: 'A popular specialty coffee shop in the heart of Shibuya, known for its excellent coffee and safe, welcoming environment for solo travelers.',
+      coordinates: [35.6762, 139.6503],
+      lastUpdated: '2 hours ago'
+    },
+    {
+      id: 2,
+      name: 'Capsule Hotel Zen',
+      category: 'Hotel',
+      location: 'Shinjuku, Tokyo',
+      rating: 4.6,
+      safetyScore: 8.9,
+      totalReviews: 2,
+      images: [
+        'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
+      tags: ['Female-only floors', '24/7 security', 'Central location', 'Clean facilities'],
+      hours: '24/7',
+      description: 'Modern capsule hotel with dedicated female-only floors and excellent security measures, perfect for solo female travelers.',
+      coordinates: [35.6896, 139.6917],
+      lastUpdated: '5 hours ago'
+    },
+    {
+      id: 3,
+      name: 'Senso-ji Temple',
+      category: 'Attraction',
+      location: 'Asakusa, Tokyo',
+      rating: 4.9,
+      safetyScore: 9.5,
+      totalReviews: 4,
+      images: [
+        'https://images.pexels.com/photos/161401/fushimi-inari-taisha-shrine-kyoto-japan-temple-161401.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
+      tags: ['Well-patrolled', 'Tourist-friendly', 'Day visits recommended', 'Cultural experience'],
+      hours: 'Daily: 6:00 AM - 5:00 PM',
+      description: 'Tokyo\'s oldest temple, well-maintained and patrolled, offering a safe cultural experience for visitors.',
+      coordinates: [35.7148, 139.7967],
+      lastUpdated: '1 day ago'
+    },
+    {
+      id: 4,
+      name: 'Starbucks Reserve Roastery',
+      category: 'Cafe',
+      location: 'Nakameguro, Tokyo',
+      rating: 4.7,
+      safetyScore: 9.0,
+      totalReviews: 2,
+      images: [
+        'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
+      tags: ['Spacious', 'Good for meetings', 'Safe area', 'Premium coffee'],
+      hours: 'Mon-Sun: 7:00 AM - 11:00 PM',
+      description: 'Flagship Starbucks location with spacious seating and a safe, upscale environment perfect for solo work or meetings.',
+      coordinates: [35.6434, 139.6982],
+      lastUpdated: '3 hours ago'
+    }
+  ]
+
+  const fallbackReviews = [
+    {
+      id: 1,
+      author: 'Sarah M.',
+      rating: 4.8,
+      safetyScore: 9.2,
+      review: 'Excellent coffee shop with a very safe and welcoming atmosphere. Great for solo travelers looking for a quiet place to work or relax.',
+      tags: ['WiFi', 'Solo-friendly', 'Well-lit'],
+      date: new Date().toISOString(),
+      helpful: 15,
+      isAiGenerated: false
+    },
+    {
+      id: 2,
+      author: 'Emma K.',
+      rating: 4.9,
+      safetyScore: 9.0,
+      review: 'Love this place! The staff is friendly and the location feels very secure. Perfect spot for digital nomads.',
+      tags: ['Great coffee', 'Safe area'],
+      date: new Date(Date.now() - 86400000).toISOString(),
+      helpful: 12,
+      isAiGenerated: false
+    }
+  ]
+
   useEffect(() => {
     const fetchPlaceAndReviews = async () => {
       try {
         setLoading(true)
         
-        // Fetch all reviews
-        const reviewsResponse = await fetch(`${BACKEND_URL}/reviews`)
+        // Try to fetch from backend with timeout
+        const reviewsResponse = await fetch(`${BACKEND_URL}/reviews`, {
+          signal: AbortSignal.timeout(5000) // 5 second timeout
+        })
         const reviewsData = await reviewsResponse.json()
         
         if (reviewsData.reviews && Array.isArray(reviewsData.reviews)) {
@@ -79,9 +186,18 @@ const PlaceDetails = () => {
             
             setReviews(formattedReviews)
           }
+        } else {
+          throw new Error('No reviews data available')
         }
       } catch (error) {
-        console.error("Failed to fetch place details and reviews:", error)
+        console.warn("Backend not available, using fallback data:", error)
+        
+        // Use fallback data
+        const placeId = id ? parseInt(id) : 1
+        const selectedPlace = fallbackPlaces.find(p => p.id === placeId) || fallbackPlaces[0]
+        
+        setPlace(selectedPlace)
+        setReviews(fallbackReviews)
       } finally {
         setLoading(false)
       }
