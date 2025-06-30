@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Star, Shield, Camera, Plus, Search } from 'lucide-react'
+import { MapPin, Star, Shield, Camera, Plus, Search, AlertCircle, CheckCircle } from 'lucide-react'
 import { supabase } from '../utils/supabaseClient'
 import { fetchSafetyReviews } from "../utils/api";
 import { submitReview } from '../utils/api'
@@ -28,6 +28,8 @@ const AddReview = () => {
   const [aiSuggestedReview, setAiSuggestedReview] = useState('');
   const [showSuggestedReviewBox, setShowSuggestedReviewBox] = useState(false);
   const [isFetchingReview, setIsFetchingReview] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [submitMessage, setSubmitMessage] = useState('');
   const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<ReviewForm>()
@@ -71,66 +73,80 @@ const AddReview = () => {
     )
   }
 
+  const onSubmit = async (data: ReviewForm) => {
+    setSubmitStatus('submitting');
+    setSubmitMessage('');
 
-const onSubmit = async (data: ReviewForm) => {
-  let imageUrls: string[] = [];
+    let imageUrls: string[] = [];
 
-  if (images.length > 0) {
-    const uploads = await Promise.all(
-      images.map(async (file) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const { error } = await supabase.storage
-          .from('review-images')
-          .upload(fileName, file);
+    if (images.length > 0) {
+      try {
+        const uploads = await Promise.all(
+          images.map(async (file) => {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+            const { error } = await supabase.storage
+              .from('review-images')
+              .upload(fileName, file);
 
-        if (error) {
-          console.error('Error uploading image:', error);
-          return null;
-        }
+            if (error) {
+              console.error('Error uploading image:', error);
+              return null;
+            }
 
-        const { data: publicUrlData } = supabase.storage
-          .from('review-images')
-          .getPublicUrl(fileName);
+            const { data: publicUrlData } = supabase.storage
+              .from('review-images')
+              .getPublicUrl(fileName);
 
-        if (!publicUrlData?.publicUrl) {
-          console.error('Failed to get public URL:', publicUrlData);
-          return null;
-        }
+            if (!publicUrlData?.publicUrl) {
+              console.error('Failed to get public URL:', publicUrlData);
+              return null;
+            }
 
-        return publicUrlData.publicUrl;
-      })
-    );
+            return publicUrlData.publicUrl;
+          })
+        );
 
-    imageUrls = uploads.filter((url): url is string => Boolean(url));
+        imageUrls = uploads.filter((url): url is string => Boolean(url));
+      } catch (error) {
+        console.error('Error uploading images:', error);
+        // Continue without images if upload fails
+      }
+    }
+
+    const reviewData = {
+      ...data,
+      rating,
+      safetyScore,
+      tags: selectedTags,
+      image_url: imageUrls[0] || null,
+      review: data.review || aiSuggestedReview,
+      aiSuggestedReview: aiSuggestedReview || '',
+    };
+
+    try {
+      const result = await submitReview(reviewData);
+      setSubmitStatus('success');
+      setSubmitMessage(result.message || 'Review submitted successfully!');
+      
+      // Reset form after successful submission
+      setTimeout(() => {
+        reset();
+        setSelectedTags([]);
+        setRating(0);
+        setSafetyScore(0);
+        setImages([]);
+        setAiSuggestedReview('');
+        setShowSuggestedReviewBox(false);
+        setSubmitStatus('idle');
+        navigate('/');
+      }, 2000);
+    } catch (error) {
+      console.error('Submission failed:', error);
+      setSubmitStatus('error');
+      setSubmitMessage('There was a problem submitting your review. Please try again.');
+    }
   }
-
-  const reviewData = {
-    ...data,
-    rating,
-    safetyScore,
-    tags: selectedTags,
-    image_url: imageUrls[0] || null,
-    review: data.review || aiSuggestedReview,
-    aiSuggestedReview: aiSuggestedReview || '',
-  };
-
-  try {
-    await submitReview(reviewData);
-    alert('Review submitted successfully!');
-    reset();
-    setSelectedTags([]);
-    setRating(0);
-    setSafetyScore(0);
-    setImages([]);
-    setAiSuggestedReview('');
-    setShowSuggestedReviewBox(false);
-    navigate('/');
-  } catch (error) {
-    console.error('Submission failed:', error);
-    alert('There was a problem submitting your review.');
-  }
-}
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -146,7 +162,6 @@ const onSubmit = async (data: ReviewForm) => {
       alert('Please enter a place name or location first to search for safety reviews.');
       return;
     }
-
 
     setIsFetchingReview(true);
     try {
@@ -176,6 +191,29 @@ const onSubmit = async (data: ReviewForm) => {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Share Your Experience</h1>
           <p className="text-xl text-gray-600">Help other women travelers by sharing your honest review</p>
         </motion.div>
+
+        {/* Status Messages */}
+        {submitStatus === 'success' && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center"
+          >
+            <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+            <span className="text-green-800">{submitMessage}</span>
+          </motion.div>
+        )}
+
+        {submitStatus === 'error' && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center"
+          >
+            <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+            <span className="text-red-800">{submitMessage}</span>
+          </motion.div>
+        )}
 
         <motion.form
           initial={{ opacity: 0, y: 20 }}
@@ -465,16 +503,20 @@ const onSubmit = async (data: ReviewForm) => {
                 setImages([])
                 setAiSuggestedReview('');
                 setShowSuggestedReviewBox(false);
+                setSubmitStatus('idle');
+                setSubmitMessage('');
               }}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              disabled={submitStatus === 'submitting'}
             >
               Clear Form
             </button>
             <button
               type="submit"
-              className="btn-primary px-8 py-3"
+              className="btn-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={submitStatus === 'submitting'}
             >
-              Submit Review
+              {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Review'}
             </button>
           </div>
         </motion.form>

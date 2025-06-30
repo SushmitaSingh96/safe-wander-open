@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, MapPin, Star, Shield, Clock } from 'lucide-react'
+import { Search, Filter, MapPin, Star, Shield, Clock, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import MapView from '../components/MapView'
 import axios from 'axios'
@@ -10,20 +10,34 @@ const Explore = () => {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [dbPlaces, setDbPlaces] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://safe-wander-backend.onrender.com"
 
   useEffect(() => {
     const fetchReviews = async () => {
+      setIsLoading(true)
+      setError(null)
+      
       try {
         console.log('Fetching reviews from:', BACKEND_URL)
+        
+        // Add timeout and better error handling
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
+        
         const response = await axios.get(`${BACKEND_URL}/reviews`, {
-          timeout: 10000 // 10 second timeout for Render
+          timeout: 15000,
+          signal: controller.signal
         })
+        
+        clearTimeout(timeoutId)
         const data = response.data
 
         if (!data.reviews || !Array.isArray(data.reviews)) {
           console.warn('No reviews found or unexpected response:', data)
+          setError('No reviews available from server')
           return
         }
 
@@ -44,7 +58,10 @@ const Explore = () => {
         setDbPlaces(reviews)
       } catch (error) {
         console.error('Error fetching reviews:', error)
-        // Don't set error state, just continue with mock data
+        setError('Unable to connect to server. Showing sample data.')
+        // Continue with mock data as fallback
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -60,8 +77,8 @@ const Explore = () => {
     { id: 'shopping', name: 'Shopping' }
   ]
 
-  // Only show mock places if no database places are available
-  const mockPlaces = dbPlaces.length === 0 ? [
+  // Show mock places if no database places are available or if there's an error
+  const mockPlaces = (dbPlaces.length === 0 || error) ? [
     {
       id: 1,
       name: 'Blue Bottle Coffee',
@@ -85,10 +102,34 @@ const Explore = () => {
       tags: ['Female-only floors', '24/7 security', 'Central location'],
       lastUpdated: '5 hours ago',
       coordinates: [35.6896, 139.6917] as [number, number]
+    },
+    {
+      id: 3,
+      name: 'Senso-ji Temple',
+      category: 'Attraction',
+      location: 'Asakusa, Tokyo',
+      rating: 4.7,
+      safetyScore: 9.0,
+      image: 'https://images.pexels.com/photos/161401/fushimi-inari-taisha-shrine-kyoto-japan-temple-161401.jpeg?auto=compress&cs=tinysrgb&w=400',
+      tags: ['Tourist area', 'Well-lit', 'Crowded', 'Safe'],
+      lastUpdated: '1 day ago',
+      coordinates: [35.7148, 139.7967] as [number, number]
+    },
+    {
+      id: 4,
+      name: 'Starbucks Reserve Roastery',
+      category: 'Cafe',
+      location: 'Nakameguro, Tokyo',
+      rating: 4.5,
+      safetyScore: 8.8,
+      image: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=400',
+      tags: ['WiFi Available', 'Solo-friendly', 'Good for work'],
+      lastUpdated: '3 hours ago',
+      coordinates: [35.6434, 139.6982] as [number, number]
     }
   ] : []
 
-  const places = [...dbPlaces, ...mockPlaces]
+  const places = error ? mockPlaces : [...dbPlaces, ...mockPlaces]
 
   const filteredPlaces = places.filter(place => {
     const matchesSearch = place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -97,6 +138,19 @@ const Explore = () => {
                            place.category.toLowerCase() === selectedCategory
     return matchesSearch && matchesCategory
   })
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <span className="ml-3 text-lg text-gray-600">Loading places...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-8">
@@ -109,9 +163,24 @@ const Explore = () => {
         >
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Explore Safe Places</h1>
           <p className="text-xl text-gray-600">Discover verified safe spaces for women solo travelers</p>
-          {dbPlaces.length > 0 && (
+          
+          {/* Status Messages */}
+          {error && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center">
+              <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
+              <span className="text-yellow-800">{error}</span>
+            </div>
+          )}
+          
+          {dbPlaces.length > 0 && !error && (
             <p className="text-sm text-green-600 mt-2">
               Showing {dbPlaces.length} places from our database
+            </p>
+          )}
+          
+          {!error && dbPlaces.length === 0 && (
+            <p className="text-sm text-blue-600 mt-2">
+              Showing sample places (backend connection unavailable)
             </p>
           )}
         </motion.div>
