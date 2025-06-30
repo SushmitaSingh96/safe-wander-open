@@ -1,6 +1,6 @@
 export async function fetchSafetyReviews(placeName: string, location: string): Promise<string[]> {
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
     const response = await fetch(`${baseUrl}/safety-reviews?placeName=${encodeURIComponent(placeName)}&location=${encodeURIComponent(location)}`);
     if (!response.ok) throw new Error('Failed to fetch safety reviews');
     const data = await response.json();
@@ -13,7 +13,7 @@ export async function fetchSafetyReviews(placeName: string, location: string): P
 
 export async function submitReview(reviewData: any) {
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
     const response = await fetch(`${baseUrl}/submit-review`, {
       method: "POST",
       headers: {
