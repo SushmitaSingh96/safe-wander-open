@@ -11,10 +11,21 @@ const Explore = () => {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [dbPlaces, setDbPlaces] = useState<any[]>([])
 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
+  const USE_FALLBACK_DATA = import.meta.env.VITE_USE_FALLBACK_DATA === 'true'
+
   useEffect(() => {
     const fetchReviews = async () => {
+      // If fallback mode is enabled, skip API call
+      if (USE_FALLBACK_DATA) {
+        console.log('Using fallback data mode - skipping API call')
+        return
+      }
+
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/reviews`)
+        const response = await axios.get(`${BACKEND_URL}/reviews`, {
+          timeout: 5000 // 5 second timeout
+        })
         const data = response.data
 
         if (!data.reviews || !Array.isArray(data.reviews)) {
@@ -36,12 +47,13 @@ const Explore = () => {
         }))
         setDbPlaces(reviews)
       } catch (error) {
-        console.error('Error fetching reviews:', error)
+        console.warn('Backend not available, using fallback data:', error.message)
+        // Don't set error state, just continue with mock data
       }
     }
 
     fetchReviews()
-  }, [])
+  }, [BACKEND_URL, USE_FALLBACK_DATA])
 
   const categories = [
     { id: 'all', name: 'All Places' },
