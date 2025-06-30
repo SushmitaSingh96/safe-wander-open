@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Filter, MapPin, Star, Shield, Clock, AlertCircle } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import MapView from '../components/MapView'
+import PlaceCardModal from '../components/PlaceCardModal'
 
 const Explore = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -11,6 +11,8 @@ const Explore = () => {
   const [dbPlaces, setDbPlaces] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedPlace, setSelectedPlace] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://safe-wander-backend.onrender.com"
 
@@ -60,7 +62,13 @@ const Explore = () => {
           image: review.image_url || 'https://images.pexels.com/photos/161401/fushimi-inari-taisha-shrine-kyoto-japan-temple-161401.jpeg?auto=compress&cs=tinysrgb&w=400',
           tags: JSON.parse(review.tags || '[]'),
           lastUpdated: new Date(review.created_at).toLocaleDateString(),
-          coordinates: [35.6895 + index * 0.001, 139.6917 + index * 0.001] as [number, number]
+          coordinates: [35.6895 + index * 0.001, 139.6917 + index * 0.001] as [number, number],
+          author: review.author || 'Anonymous Traveler',
+          review: review.review,
+          created_at: review.created_at,
+          description: review.review,
+          hours: 'Hours vary by location',
+          totalReviews: Math.floor(Math.random() * 50) + 10
         }))
         
         console.log('Fetched reviews:', reviews)
@@ -113,7 +121,11 @@ const Explore = () => {
       image: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=400',
       tags: ['WiFi', 'Solo-friendly', 'Well-lit'],
       lastUpdated: '2 hours ago',
-      coordinates: [35.6762, 139.6503] as [number, number]
+      coordinates: [35.6762, 139.6503] as [number, number],
+      description: 'A popular coffee chain known for its high-quality beans and minimalist aesthetic. This Shibuya location is particularly welcoming to solo travelers.',
+      hours: 'Mon-Sun: 7:00 AM - 10:00 PM',
+      totalReviews: 127,
+      author: 'Sarah M.'
     },
     {
       id: 2,
@@ -125,7 +137,11 @@ const Explore = () => {
       image: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=400',
       tags: ['Female-only floors', '24/7 security', 'Central location'],
       lastUpdated: '5 hours ago',
-      coordinates: [35.6896, 139.6917] as [number, number]
+      coordinates: [35.6896, 139.6917] as [number, number],
+      description: 'Modern capsule hotel with excellent security features and female-only floors. Perfect for solo female travelers looking for affordable, safe accommodation.',
+      hours: '24/7 Check-in',
+      totalReviews: 89,
+      author: 'Emma K.'
     },
     {
       id: 3,
@@ -137,7 +153,11 @@ const Explore = () => {
       image: 'https://images.pexels.com/photos/161401/fushimi-inari-taisha-shrine-kyoto-japan-temple-161401.jpeg?auto=compress&cs=tinysrgb&w=400',
       tags: ['Tourist area', 'Well-lit', 'Crowded', 'Safe'],
       lastUpdated: '1 day ago',
-      coordinates: [35.7148, 139.7967] as [number, number]
+      coordinates: [35.7148, 139.7967] as [number, number],
+      description: 'Tokyo\'s oldest temple with beautiful architecture and rich history. Well-patrolled area with plenty of tourists and good lighting.',
+      hours: 'Daily: 6:00 AM - 5:00 PM',
+      totalReviews: 203,
+      author: 'Lisa J.'
     },
     {
       id: 4,
@@ -149,7 +169,11 @@ const Explore = () => {
       image: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=400',
       tags: ['WiFi Available', 'Solo-friendly', 'Good for work'],
       lastUpdated: '3 hours ago',
-      coordinates: [35.6434, 139.6982] as [number, number]
+      coordinates: [35.6434, 139.6982] as [number, number],
+      description: 'Premium coffee experience with spacious seating and excellent WiFi. Great for digital nomads and solo workers.',
+      hours: 'Daily: 7:00 AM - 11:00 PM',
+      totalReviews: 156,
+      author: 'Maria S.'
     }
   ] : []
 
@@ -165,6 +189,16 @@ const Explore = () => {
 
   const retryFetch = () => {
     window.location.reload()
+  }
+
+  const handlePlaceClick = (place: any) => {
+    setSelectedPlace(place)
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedPlace(null)
   }
 
   if (isLoading) {
@@ -305,56 +339,60 @@ const Explore = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                onClick={() => handlePlaceClick(place)}
               >
-                <Link to={`/place/${place.id}`} className="block">
-                  <div className="relative">
-                    <img
-                      src={place.image}
-                      alt={place.name}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-primary-800 text-sm font-medium rounded-full">
-                        {place.category}
+                <div className="relative">
+                  <img
+                    src={place.image}
+                    alt={place.name}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="absolute top-4 left-4">
+                    <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-primary-800 text-sm font-medium rounded-full">
+                      {place.category}
+                    </span>
+                  </div>
+                  <div className="absolute top-4 right-4 flex items-center space-x-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
+                    <Shield className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-semibold text-green-600">{place.safetyScore}</span>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">{place.name}</h3>
+                    <div className="flex items-center space-x-1">
+                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                      <span className="font-semibold text-gray-900">{place.rating}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center text-gray-500 mb-4">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    <span className="text-sm">{place.location}</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {place.tags.slice(0, 3).map((tag: string, tagIndex: number) => (
+                      <span
+                        key={tagIndex}
+                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                      >
+                        {tag}
                       </span>
-                    </div>
-                    <div className="absolute top-4 right-4 flex items-center space-x-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
-                      <Shield className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-semibold text-green-600">{place.safetyScore}</span>
-                    </div>
+                    ))}
+                    {place.tags.length > 3 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">
+                        +{place.tags.length - 3} more
+                      </span>
+                    )}
                   </div>
 
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{place.name}</h3>
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="font-semibold text-gray-900">{place.rating}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center text-gray-500 mb-4">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      <span className="text-sm">{place.location}</span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {place.tags.map((tag: string, tagIndex: number) => (
-                        <span
-                          key={tagIndex}
-                          className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center text-xs text-gray-500">
-                      <Clock className="w-3 h-3 mr-1" />
-                      <span>Updated {place.lastUpdated}</span>
-                    </div>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <Clock className="w-3 h-3 mr-1" />
+                    <span>Updated {place.lastUpdated}</span>
                   </div>
-                </Link>
+                </div>
               </motion.div>
             ))}
           </motion.div>
@@ -383,6 +421,13 @@ const Explore = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Place Card Modal */}
+      <PlaceCardModal
+        place={selectedPlace}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+      />
     </div>
   )
 }
