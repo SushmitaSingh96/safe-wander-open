@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { Search, Filter, MapPin, Star, Shield, Clock, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import MapView from '../components/MapView'
-import axios from 'axios'
 
 const Explore = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -25,15 +24,25 @@ const Explore = () => {
         
         // Add timeout and better error handling
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000) // Increased to 30 seconds for Render cold starts
         
-        const response = await axios.get(`${BACKEND_URL}/reviews`, {
-          timeout: 15000,
-          signal: controller.signal
+        const response = await fetch(`${BACKEND_URL}/reviews`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          signal: controller.signal,
+          mode: 'cors', // Explicitly set CORS mode
         })
         
         clearTimeout(timeoutId)
-        const data = response.data
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+        
+        const data = await response.json()
 
         if (!data.reviews || !Array.isArray(data.reviews)) {
           console.warn('No reviews found or unexpected response:', data)
@@ -58,8 +67,23 @@ const Explore = () => {
         setDbPlaces(reviews)
       } catch (error) {
         console.error('Error fetching reviews:', error)
-        setError('Unable to connect to server. Showing sample data.')
-        // Continue with mock data as fallback
+        
+        let errorMessage = 'Unable to connect to server. '
+        
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            errorMessage += 'Request timed out. The server may be starting up (this can take up to 30 seconds on Render).'
+          } else if (error.message.includes('Failed to fetch') || error.message.includes('Network Error')) {
+            errorMessage += 'Network connection failed. Please check your internet connection and try again.'
+          } else if (error.message.includes('CORS')) {
+            errorMessage += 'Cross-origin request blocked. Please contact support.'
+          } else {
+            errorMessage += error.message
+          }
+        }
+        
+        errorMessage += ' Showing sample data instead.'
+        setError(errorMessage)
       } finally {
         setIsLoading(false)
       }
@@ -139,13 +163,22 @@ const Explore = () => {
     return matchesSearch && matchesCategory
   })
 
+  const retryFetch = () => {
+    window.location.reload()
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            <span className="ml-3 text-lg text-gray-600">Loading places...</span>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+              <span className="text-lg text-gray-600">Loading places...</span>
+              <p className="text-sm text-gray-500 mt-2">
+                If this is taking a while, the server may be starting up. Please wait up to 30 seconds.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -166,9 +199,19 @@ const Explore = () => {
           
           {/* Status Messages */}
           {error && (
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center">
-              <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
-              <span className="text-yellow-800">{error}</span>
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start">
+                <AlertCircle className="w-5 h-5 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <span className="text-yellow-800">{error}</span>
+                  <button 
+                    onClick={retryFetch}
+                    className="ml-4 text-yellow-800 underline hover:text-yellow-900 font-medium"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
             </div>
           )}
           

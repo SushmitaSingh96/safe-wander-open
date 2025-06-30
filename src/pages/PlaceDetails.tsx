@@ -71,15 +71,24 @@ const PlaceDetails = () => {
         setLoading(true)
         console.log('Fetching reviews from:', BACKEND_URL)
         
+        // Add timeout and better error handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased to 30 seconds for Render cold starts
+        
         const res = await fetch(`${BACKEND_URL}/reviews`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
+          signal: controller.signal,
+          mode: 'cors', // Explicitly set CORS mode
         });
         
+        clearTimeout(timeoutId);
+        
         if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
         
         const data = await res.json();
@@ -166,6 +175,9 @@ const PlaceDetails = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading place details...</p>
+          <p className="text-sm text-gray-500 mt-2">
+            If this is taking a while, the server may be starting up. Please wait up to 30 seconds.
+          </p>
         </div>
       </div>
     )

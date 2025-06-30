@@ -4,20 +4,22 @@ export async function fetchSafetyReviews(placeName: string, location: string): P
     
     // Add timeout and better error handling
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased to 30 seconds for Render cold starts
     
     const response = await fetch(`${baseUrl}/safety-reviews?placeName=${encodeURIComponent(placeName)}&location=${encodeURIComponent(location)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       signal: controller.signal,
+      mode: 'cors', // Explicitly set CORS mode
     });
     
     clearTimeout(timeoutId);
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
     const data = await response.json();
@@ -42,22 +44,24 @@ export async function submitReview(reviewData: any) {
     
     // Add timeout and better error handling
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased to 30 seconds for Render cold starts
     
     const response = await fetch(`${baseUrl}/submit-review`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
       },
       body: JSON.stringify(reviewData),
       signal: controller.signal,
+      mode: 'cors', // Explicitly set CORS mode
     });
 
     clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to submit review: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
     }
 
     return response.json();
@@ -66,7 +70,7 @@ export async function submitReview(reviewData: any) {
     
     // For now, simulate successful submission when backend is unavailable
     // In a real app, you might want to store this locally and sync later
-    if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch'))) {
+    if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch') || error.message.includes('Network Error'))) {
       console.warn('Backend unavailable, simulating successful submission');
       return { success: true, message: 'Review submitted successfully (offline mode)' };
     }
