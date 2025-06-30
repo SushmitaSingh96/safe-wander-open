@@ -80,7 +80,7 @@ const onSubmit = async (data: ReviewForm) => {
       images.map(async (file) => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const { data: uploadedFileData, error } = await supabase.storage
+        const { error } = await supabase.storage
           .from('review-images')
           .upload(fileName, file);
 
