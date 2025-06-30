@@ -1,47 +1,64 @@
 import { motion } from 'framer-motion'
 import { MapPin, Star, Shield, Clock, Users, Camera, ThumbsUp, Flag } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const PlaceDetails = () => {
 
-  // Mock data - in real app, this would be fetched based on the ID
-  const place = {
-    id: 1,
-    name: 'Blue Bottle Coffee',
-    category: 'Cafe',
-    location: 'Shibuya, Tokyo, Japan',
-    rating: 4.8,
-    safetyScore: 9.2,
-    totalReviews: 127,
-    images: [
-      'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800',
-      'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
-      'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
-    ],
-    tags: ['WiFi Available', 'Solo-friendly', 'Well-lit', 'English-speaking staff'],
-    hours: 'Mon-Sun: 7:00 AM - 10:00 PM',
-    description: 'A popular coffee chain known for its high-quality beans and minimalist aesthetic. This Shibuya location is particularly welcoming to solo travelers.',
-    coordinates: [35.6762, 139.6503],
-    lastUpdated: '2 hours ago'
-  }
-
+  const { id } = useParams();
+  const [place, setPlace] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([])
 
   useEffect(() => {
-    const fetchReviews = async () => {
+    const fetchPlace = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/reviews`);
+        const res = await fetch(`${BACKEND_URL}/reviews/${id}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch review with id ${id}, status: ${res.status}`);
+        }
         const data = await res.json();
-        setReviews(data.reviews || []);
-      } catch (error) {
-        console.error("Failed to fetch reviews:", error);
+        const review = data.review;
+
+        setPlace({
+          id: review.id,
+          name: review.placeName,
+          category: review.category,
+          location: review.location,
+          rating: review.rating,
+          safetyScore: review.safetyScore,
+          totalReviews: 1,
+          images: [review.image_url || 'https://via.placeholder.com/800'],
+          tags: review.tags ? JSON.parse(review.tags) : [],
+          hours: 'Unknown',
+          description: '', // empty string,
+          lastUpdated: new Date(review.created_at).toLocaleDateString(),
+        });
+
+        setReviews([{
+          id: review.id,
+          author: 'Anonymous',
+          rating: review.rating,
+          safetyScore: review.safetyScore,
+          review: review.review,
+          tags: review.tags ? JSON.parse(review.tags) : [],
+          date: review.lastVisitTime,
+          helpful: 0,
+        }]);
+      } catch (err) {
+        console.error('Failed to fetch place:', err);
       }
     };
 
-    fetchReviews();
-  }, []);
+    if (id) {
+      fetchPlace();
+    }
+  }, [id, BACKEND_URL]);
+
+  if (!place) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-8">
@@ -52,36 +69,14 @@ const PlaceDetails = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8"
         >
-          {/* Image Gallery */}
-          <div className="grid md:grid-cols-3 gap-2 h-80">
-            <div className="md:col-span-2">
-              <img
-                src={place.images[0]}
-                alt={place.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="grid grid-rows-2 gap-2">
-              <img
-                src={place.images[1]}
-                alt={place.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="relative">
-                <img
-                  src={place.images[2]}
-                  alt={place.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <div className="flex items-center text-white">
-                    <Camera className="w-5 h-5 mr-2" />
-                    <span className="font-medium">+5 more photos</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Single Image */}
+        <div className="h-80 w-full">
+          <img
+            src={place.images}
+            alt={place.name}
+            className="w-full h-full object-cover rounded-xl"
+          />
+        </div>
 
           {/* Place Info */}
           <div className="p-8">
@@ -126,7 +121,7 @@ const PlaceDetails = () => {
 
             {/* Tags */}
             <div className="flex flex-wrap gap-2 mb-6">
-              {place.tags.map((tag, index) => (
+              {place.tags.map((tag: string, index: number) => (
                 <span
                   key={index}
                   className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"

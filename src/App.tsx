@@ -21,7 +21,7 @@ function App() {
           <Route path="/explore" element={<Explore />} />
           <Route path="/add-review" element={<AddReview />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/place/:id" element={<PlaceDetails />} />
+          <Route path="/places/:id" element={<PlaceDetails />} />
         </Routes>
       </motion.main>
     </div>
