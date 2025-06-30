@@ -11,69 +11,14 @@ const Explore = () => {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [dbPlaces, setDbPlaces] = useState<any[]>([])
 
-  // Fallback data when backend is not available
-  const fallbackPlaces = [
-    {
-      id: 5,
-      name: 'Tsutaya Starbucks',
-      category: 'cafe',
-      location: 'Shibuya, Tokyo',
-      rating: 4.7,
-      safetyScore: 9.1,
-      image: 'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=400',
-      tags: ['WiFi', 'Study-friendly', 'Safe area', 'Well-lit'],
-      lastUpdated: '1 hour ago',
-      coordinates: [35.6595, 139.7006] as [number, number]
-    },
-    {
-      id: 6,
-      name: 'Tokyo Station Hotel',
-      category: 'hotel',
-      location: 'Marunouchi, Tokyo',
-      rating: 4.9,
-      safetyScore: 9.8,
-      image: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=400',
-      tags: ['Luxury', '24/7 concierge', 'Central location', 'Female-friendly'],
-      lastUpdated: '30 minutes ago',
-      coordinates: [35.6812, 139.7671] as [number, number]
-    },
-    {
-      id: 7,
-      name: 'Meiji Shrine',
-      category: 'attraction',
-      location: 'Shibuya, Tokyo',
-      rating: 4.8,
-      safetyScore: 9.4,
-      image: 'https://images.pexels.com/photos/161401/fushimi-inari-taisha-shrine-kyoto-japan-temple-161401.jpeg?auto=compress&cs=tinysrgb&w=400',
-      tags: ['Peaceful', 'Well-maintained', 'Tourist police', 'Day visits'],
-      lastUpdated: '2 hours ago',
-      coordinates: [35.6761, 139.6993] as [number, number]
-    },
-    {
-      id: 8,
-      name: 'Ginza Six Shopping',
-      category: 'shopping',
-      location: 'Ginza, Tokyo',
-      rating: 4.6,
-      safetyScore: 9.3,
-      image: 'https://images.pexels.com/photos/1005417/pexels-photo-1005417.jpeg?auto=compress&cs=tinysrgb&w=400',
-      tags: ['Upscale', 'Security guards', 'Well-lit', 'Tourist-friendly'],
-      lastUpdated: '4 hours ago',
-      coordinates: [35.6717, 139.7634] as [number, number]
-    }
-  ]
-
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/reviews`, {
-          timeout: 5000 // 5 second timeout
-        })
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/reviews`)
         const data = response.data
 
         if (!data.reviews || !Array.isArray(data.reviews)) {
           console.warn('No reviews found or unexpected response:', data)
-          setDbPlaces(fallbackPlaces)
           return
         }
 
@@ -91,8 +36,7 @@ const Explore = () => {
         }))
         setDbPlaces(reviews)
       } catch (error) {
-        console.warn('Backend not available, using fallback data:', error)
-        setDbPlaces(fallbackPlaces)
+        console.error('Error fetching reviews:', error)
       }
     }
 
@@ -112,7 +56,7 @@ const Explore = () => {
     {
       id: 1,
       name: 'Blue Bottle Coffee',
-      category: 'cafe',
+      category: 'Cafe',
       location: 'Shibuya, Tokyo',
       rating: 4.8,
       safetyScore: 9.2,
@@ -124,7 +68,7 @@ const Explore = () => {
     {
       id: 2,
       name: 'Capsule Hotel Zen',
-      category: 'hotel',
+      category: 'Hotel',
       location: 'Shinjuku, Tokyo',
       rating: 4.6,
       safetyScore: 8.9,
@@ -136,7 +80,7 @@ const Explore = () => {
     {
       id: 3,
       name: 'Senso-ji Temple',
-      category: 'attraction',
+      category: 'Attraction',
       location: 'Asakusa, Tokyo',
       rating: 4.9,
       safetyScore: 9.5,
@@ -148,7 +92,7 @@ const Explore = () => {
     {
       id: 4,
       name: 'Starbucks Reserve Roastery',
-      category: 'cafe',
+      category: 'Cafe',
       location: 'Nakameguro, Tokyo',
       rating: 4.7,
       safetyScore: 9.0,
@@ -267,7 +211,7 @@ const Explore = () => {
                       className="w-full h-48 object-cover"
                     />
                     <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-primary-800 text-sm font-medium rounded-full capitalize">
+                      <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-primary-800 text-sm font-medium rounded-full">
                         {place.category}
                       </span>
                     </div>

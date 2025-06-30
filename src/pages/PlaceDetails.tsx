@@ -11,200 +11,140 @@ const PlaceDetails = () => {
   const [place, setPlace] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  // Fallback data when backend is not available
-  const fallbackPlaces = [
-    {
-      id: 1,
-      name: 'Blue Bottle Coffee',
-      category: 'Cafe',
-      location: 'Shibuya, Tokyo',
-      rating: 4.8,
-      safetyScore: 9.2,
-      totalReviews: 3,
-      images: [
-        'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      tags: ['WiFi', 'Solo-friendly', 'Well-lit', 'Great coffee'],
-      hours: 'Mon-Sun: 7:00 AM - 10:00 PM',
-      description: 'A popular specialty coffee shop in the heart of Shibuya, known for its excellent coffee and safe, welcoming environment for solo travelers.',
-      coordinates: [35.6762, 139.6503],
-      lastUpdated: '2 hours ago'
-    },
-    {
-      id: 2,
-      name: 'Capsule Hotel Zen',
-      category: 'Hotel',
-      location: 'Shinjuku, Tokyo',
-      rating: 4.6,
-      safetyScore: 8.9,
-      totalReviews: 2,
-      images: [
-        'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      tags: ['Female-only floors', '24/7 security', 'Central location', 'Clean facilities'],
-      hours: '24/7',
-      description: 'Modern capsule hotel with dedicated female-only floors and excellent security measures, perfect for solo female travelers.',
-      coordinates: [35.6896, 139.6917],
-      lastUpdated: '5 hours ago'
-    },
-    {
-      id: 3,
-      name: 'Senso-ji Temple',
-      category: 'Attraction',
-      location: 'Asakusa, Tokyo',
-      rating: 4.9,
-      safetyScore: 9.5,
-      totalReviews: 4,
-      images: [
-        'https://images.pexels.com/photos/161401/fushimi-inari-taisha-shrine-kyoto-japan-temple-161401.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      tags: ['Well-patrolled', 'Tourist-friendly', 'Day visits recommended', 'Cultural experience'],
-      hours: 'Daily: 6:00 AM - 5:00 PM',
-      description: 'Tokyo\'s oldest temple, well-maintained and patrolled, offering a safe cultural experience for visitors.',
-      coordinates: [35.7148, 139.7967],
-      lastUpdated: '1 day ago'
-    },
-    {
-      id: 4,
-      name: 'Starbucks Reserve Roastery',
-      category: 'Cafe',
-      location: 'Nakameguro, Tokyo',
-      rating: 4.7,
-      safetyScore: 9.0,
-      totalReviews: 2,
-      images: [
-        'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      tags: ['Spacious', 'Good for meetings', 'Safe area', 'Premium coffee'],
-      hours: 'Mon-Sun: 7:00 AM - 11:00 PM',
-      description: 'Flagship Starbucks location with spacious seating and a safe, upscale environment perfect for solo work or meetings.',
-      coordinates: [35.6434, 139.6982],
-      lastUpdated: '3 hours ago'
-    }
-  ]
+  // Mock data - in real app, this would be fetched based on the ID
+  const mockPlace = {
+    id: 1,
+    name: 'Blue Bottle Coffee',
+    category: 'Cafe',
+    location: 'Shibuya, Tokyo, Japan',
+    rating: 4.8,
+    safetyScore: 9.2,
+    totalReviews: 127,
+    images: [
+      'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800',
+      'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
+      'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
+    ],
+    tags: ['WiFi Available', 'Solo-friendly', 'Well-lit', 'English-speaking staff'],
+    hours: 'Mon-Sun: 7:00 AM - 10:00 PM',
+    description: 'A popular coffee chain known for its high-quality beans and minimalist aesthetic. This Shibuya location is particularly welcoming to solo travelers.',
+    coordinates: [35.6762, 139.6503],
+    lastUpdated: '2 hours ago'
+  }
 
-  const fallbackReviews = [
+  const mockReviews = [
     {
       id: 1,
       author: 'Sarah M.',
       rating: 4.8,
       safetyScore: 9.2,
-      review: 'Excellent coffee shop with a very safe and welcoming atmosphere. Great for solo travelers looking for a quiet place to work or relax.',
+      review: 'Perfect spot for solo work sessions. Great WiFi, friendly staff, and felt very safe even late in the evening.',
       tags: ['WiFi', 'Solo-friendly', 'Well-lit'],
-      date: new Date().toISOString(),
-      helpful: 15,
-      isAiGenerated: false
+      date: '2024-01-15',
+      helpful: 15
     },
     {
       id: 2,
       author: 'Emma K.',
       rating: 4.9,
       safetyScore: 9.0,
-      review: 'Love this place! The staff is friendly and the location feels very secure. Perfect spot for digital nomads.',
-      tags: ['Great coffee', 'Safe area'],
-      date: new Date(Date.now() - 86400000).toISOString(),
-      helpful: 12,
-      isAiGenerated: false
+      review: 'Love this place! The staff speaks English and the location feels very secure. Perfect for digital nomads.',
+      tags: ['English-speaking staff', 'Safe area'],
+      date: '2024-01-10',
+      helpful: 12
+    },
+    {
+      id: 3,
+      author: 'Lisa J.',
+      rating: 4.7,
+      safetyScore: 9.3,
+      review: 'Excellent coffee and atmosphere. Well-lit interior and busy enough to feel safe but not overcrowded.',
+      tags: ['Great coffee', 'Well-lit', 'Good atmosphere'],
+      date: '2024-01-08',
+      helpful: 8
     }
   ]
 
   useEffect(() => {
-    const fetchPlaceAndReviews = async () => {
+    const fetchReviews = async () => {
       try {
         setLoading(true)
+        const res = await fetch(`${BACKEND_URL}/reviews`);
+        const data = await res.json();
         
-        // Try to fetch from backend with timeout
-        const reviewsResponse = await fetch(`${BACKEND_URL}/reviews`, {
-          signal: AbortSignal.timeout(5000) // 5 second timeout
-        })
-        const reviewsData = await reviewsResponse.json()
-        
-        if (reviewsData.reviews && Array.isArray(reviewsData.reviews)) {
-          // If we have an ID, filter reviews for that specific place
-          let filteredReviews = reviewsData.reviews
-          let selectedPlace = null
+        if (data.reviews && Array.isArray(data.reviews)) {
+          // If we have database reviews, use them
+          const dbReviews = data.reviews.map((review: any) => ({
+            id: review.id,
+            author: review.author || 'Anonymous Traveler',
+            rating: review.rating,
+            safetyScore: review.safetyScore,
+            review: review.review,
+            tags: JSON.parse(review.tags || '[]'),
+            date: new Date(review.created_at).toLocaleDateString(),
+            helpful: Math.floor(Math.random() * 20) + 1,
+            isFromDatabase: true
+          }))
           
+          // If we have a specific place ID, try to find matching reviews
           if (id) {
-            // Find the specific place by ID
-            filteredReviews = reviewsData.reviews.filter((review: any) => review.id.toString() === id)
-            if (filteredReviews.length > 0) {
-              selectedPlace = filteredReviews[0]
+            const matchingReviews = data.reviews.filter((review: any) => review.id.toString() === id)
+            if (matchingReviews.length > 0) {
+              const dbPlace = matchingReviews[0]
+              setPlace({
+                ...mockPlace,
+                id: dbPlace.id,
+                name: dbPlace.placeName,
+                category: dbPlace.category,
+                location: dbPlace.location,
+                rating: dbPlace.rating,
+                safetyScore: dbPlace.safetyScore,
+                totalReviews: matchingReviews.length,
+                tags: JSON.parse(dbPlace.tags || '[]'),
+                description: dbPlace.review || mockPlace.description,
+                lastUpdated: new Date(dbPlace.created_at).toLocaleDateString()
+              })
+              setReviews(matchingReviews.map((review: any) => ({
+                id: review.id,
+                author: review.author || 'Anonymous Traveler',
+                rating: review.rating,
+                safetyScore: review.safetyScore,
+                review: review.review,
+                tags: JSON.parse(review.tags || '[]'),
+                date: new Date(review.created_at).toLocaleDateString(),
+                helpful: Math.floor(Math.random() * 20) + 1,
+                isFromDatabase: true
+              })))
+            } else {
+              // Use mock data if no matching review found
+              setPlace(mockPlace)
+              setReviews(mockReviews)
             }
           } else {
-            // If no ID, show the first place as default
-            selectedPlace = reviewsData.reviews[0]
-            filteredReviews = reviewsData.reviews.filter((review: any) => 
-              review.placeName === selectedPlace?.placeName && 
-              review.location === selectedPlace?.location
-            )
-          }
-
-          if (selectedPlace) {
-            // Create place object from the review data
-            const placeData = {
-              id: selectedPlace.id,
-              name: selectedPlace.placeName,
-              category: selectedPlace.category,
-              location: selectedPlace.location,
-              rating: selectedPlace.rating,
-              safetyScore: selectedPlace.safetyScore,
-              totalReviews: filteredReviews.length,
-              images: [
-                selectedPlace.image_url || 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800',
-                'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=800',
-                'https://images.pexels.com/photos/2074130/pexels-photo-2074130.jpeg?auto=compress&cs=tinysrgb&w=800'
-              ],
-              tags: JSON.parse(selectedPlace.tags || '[]'),
-              hours: 'Mon-Sun: 7:00 AM - 10:00 PM',
-              description: selectedPlace.review || 'A popular location recommended by our community of solo female travelers.',
-              coordinates: [35.6762, 139.6503],
-              lastUpdated: new Date(selectedPlace.created_at).toLocaleDateString()
-            }
-            
-            setPlace(placeData)
-            
-            // Format reviews for display
-            const formattedReviews = filteredReviews.map((review: any) => ({
-              id: review.id,
-              author: review.author || 'Anonymous Traveler',
-              rating: review.rating,
-              safetyScore: review.safetyScore,
-              review: review.review,
-              tags: JSON.parse(review.tags || '[]'),
-              date: review.created_at,
-              helpful: Math.floor(Math.random() * 20) + 1, // Random helpful count for now
-              isAiGenerated: review.aiSuggestedReview && review.aiSuggestedReview.length > 0
-            }))
-            
-            setReviews(formattedReviews)
+            // Show all database reviews if no specific ID
+            setPlace({
+              ...mockPlace,
+              totalReviews: dbReviews.length
+            })
+            setReviews(dbReviews)
           }
         } else {
-          throw new Error('No reviews data available')
+          // Fallback to mock data
+          setPlace(mockPlace)
+          setReviews(mockReviews)
         }
       } catch (error) {
-        console.warn("Backend not available, using fallback data:", error)
-        
-        // Use fallback data
-        const placeId = id ? parseInt(id) : 1
-        const selectedPlace = fallbackPlaces.find(p => p.id === placeId) || fallbackPlaces[0]
-        
-        setPlace(selectedPlace)
-        setReviews(fallbackReviews)
+        console.error("Failed to fetch place details and reviews:", error);
+        // Fallback to mock data
+        setPlace(mockPlace)
+        setReviews(mockReviews)
       } finally {
         setLoading(false)
       }
-    }
+    };
 
-    fetchPlaceAndReviews()
-  }, [id])
+    fetchReviews();
+  }, [id]);
 
   if (loading) {
     return (
@@ -260,7 +200,7 @@ const PlaceDetails = () => {
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                   <div className="flex items-center text-white">
                     <Camera className="w-5 h-5 mr-2" />
-                    <span className="font-medium">+{Math.max(0, reviews.length - 3)} more photos</span>
+                    <span className="font-medium">+5 more photos</span>
                   </div>
                 </div>
               </div>
@@ -346,106 +286,89 @@ const PlaceDetails = () => {
         >
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-semibold text-gray-900">
-              Reviews ({place.totalReviews})
+              Reviews ({reviews.length})
             </h2>
             <button className="btn-primary">
               Write a Review
             </button>
           </div>
 
-          {reviews.length > 0 ? (
-            <div className="space-y-8">
-              {reviews.map((review, index) => (
-                <motion.div
-                  key={review.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  className="border-b border-gray-100 pb-8 last:border-b-0"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-sm">
-                          {review.author.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <p className="font-semibold text-gray-900">{review.author}</p>
-                          {review.isAiGenerated && (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                              AI Enhanced
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          {new Date(review.date).toLocaleDateString()}
-                        </p>
-                      </div>
+          <div className="space-y-8">
+            {reviews.map((review, index) => (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
+                className="border-b border-gray-100 pb-8 last:border-b-0"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold text-sm">
+                        {review.author.charAt(0)}
+                      </span>
                     </div>
-
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="font-semibold text-gray-900">{review.rating}</span>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <p className="font-semibold text-gray-900">{review.author}</p>
+                        {review.isFromDatabase && (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                            Verified Review
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Shield className="w-4 h-4 text-green-600" />
-                        <span className="font-semibold text-green-600">{review.safetyScore}</span>
-                      </div>
+                      <p className="text-sm text-gray-500">
+                        {review.date}
+                      </p>
                     </div>
                   </div>
 
-                  <p className="text-gray-700 mb-4">{review.review}</p>
-
-                  {review.tags && review.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {review.tags.map((tag: string, tagIndex: number) => (
-                        <span
-                          key={tagIndex}
-                          className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1">
+                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                      <span className="font-semibold text-gray-900">{review.rating}</span>
                     </div>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <button className="flex items-center space-x-2 text-gray-500 hover:text-primary-600 transition-colors">
-                      <ThumbsUp className="w-4 h-4" />
-                      <span className="text-sm">Helpful ({review.helpful})</span>
-                    </button>
-                    
-                    <button className="flex items-center space-x-2 text-gray-500 hover:text-red-600 transition-colors">
-                      <Flag className="w-4 h-4" />
-                      <span className="text-sm">Report</span>
-                    </button>
+                    <div className="flex items-center space-x-1">
+                      <Shield className="w-4 h-4 text-green-600" />
+                      <span className="font-semibold text-green-600">{review.safetyScore}</span>
+                    </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <Star className="w-16 h-16 mx-auto" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No reviews yet</h3>
-              <p className="text-gray-600 mb-4">Be the first to share your experience!</p>
-              <button className="btn-primary">
-                Write the First Review
-              </button>
-            </div>
-          )}
+                </div>
 
-          {reviews.length > 5 && (
-            <div className="text-center mt-8">
-              <button className="btn-secondary">
-                Load More Reviews
-              </button>
-            </div>
-          )}
+                <p className="text-gray-700 mb-4">{review.review}</p>
+
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {review.tags.map((tag: string, tagIndex: number) => (
+                    <span
+                      key={tagIndex}
+                      className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <button className="flex items-center space-x-2 text-gray-500 hover:text-primary-600 transition-colors">
+                    <ThumbsUp className="w-4 h-4" />
+                    <span className="text-sm">Helpful ({review.helpful})</span>
+                  </button>
+                  
+                  <button className="flex items-center space-x-2 text-gray-500 hover:text-red-600 transition-colors">
+                    <Flag className="w-4 h-4" />
+                    <span className="text-sm">Report</span>
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center mt-8">
+            <button className="btn-secondary">
+              Load More Reviews
+            </button>
+          </div>
         </motion.div>
       </div>
     </div>
