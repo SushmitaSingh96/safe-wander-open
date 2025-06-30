@@ -3,13 +3,13 @@ import { MapPin, Star, Shield, Clock, Users, Camera, ThumbsUp, Flag } from 'luci
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
 const PlaceDetails = () => {
   const { id } = useParams()
   const [reviews, setReviews] = useState<any[]>([])
   const [place, setPlace] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://safe-wander-backend.onrender.com"
 
   // Mock data - in real app, this would be fetched based on the ID
   const mockPlace = {
@@ -66,25 +66,26 @@ const PlaceDetails = () => {
   ]
 
   useEffect(() => {
-    const fetchReviews = async () => {
+    const fetchPlaceAndReviews = async () => {
       try {
         setLoading(true)
-        const res = await fetch(`${BACKEND_URL}/reviews`);
+        console.log('Fetching reviews from:', BACKEND_URL)
+        
+        const res = await fetch(`${BACKEND_URL}/reviews`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         const data = await res.json();
         
         if (data.reviews && Array.isArray(data.reviews)) {
-          // If we have database reviews, use them
-          const dbReviews = data.reviews.map((review: any) => ({
-            id: review.id,
-            author: review.author || 'Anonymous Traveler',
-            rating: review.rating,
-            safetyScore: review.safetyScore,
-            review: review.review,
-            tags: JSON.parse(review.tags || '[]'),
-            date: new Date(review.created_at).toLocaleDateString(),
-            helpful: Math.floor(Math.random() * 20) + 1,
-            isFromDatabase: true
-          }))
+          console.log('Fetched reviews:', data.reviews)
           
           // If we have a specific place ID, try to find matching reviews
           if (id) {
@@ -122,6 +123,18 @@ const PlaceDetails = () => {
             }
           } else {
             // Show all database reviews if no specific ID
+            const dbReviews = data.reviews.map((review: any) => ({
+              id: review.id,
+              author: review.author || 'Anonymous Traveler',
+              rating: review.rating,
+              safetyScore: review.safetyScore,
+              review: review.review,
+              tags: JSON.parse(review.tags || '[]'),
+              date: new Date(review.created_at).toLocaleDateString(),
+              helpful: Math.floor(Math.random() * 20) + 1,
+              isFromDatabase: true
+            }))
+            
             setPlace({
               ...mockPlace,
               totalReviews: dbReviews.length
@@ -130,6 +143,7 @@ const PlaceDetails = () => {
           }
         } else {
           // Fallback to mock data
+          console.log('No reviews found, using mock data')
           setPlace(mockPlace)
           setReviews(mockReviews)
         }
@@ -143,8 +157,8 @@ const PlaceDetails = () => {
       }
     };
 
-    fetchReviews();
-  }, [id]);
+    fetchPlaceAndReviews();
+  }, [id, BACKEND_URL]);
 
   if (loading) {
     return (

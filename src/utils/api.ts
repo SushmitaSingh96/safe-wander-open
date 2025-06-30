@@ -1,8 +1,17 @@
 export async function fetchSafetyReviews(placeName: string, location: string): Promise<string[]> {
   try {
-    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
-    const response = await fetch(`${baseUrl}/safety-reviews?placeName=${encodeURIComponent(placeName)}&location=${encodeURIComponent(location)}`);
-    if (!response.ok) throw new Error('Failed to fetch safety reviews');
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "https://safe-wander-backend.onrender.com";
+    const response = await fetch(`${baseUrl}/safety-reviews?placeName=${encodeURIComponent(placeName)}&location=${encodeURIComponent(location)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
     return data.reviews || []; 
   } catch (error) {
@@ -13,7 +22,7 @@ export async function fetchSafetyReviews(placeName: string, location: string): P
 
 export async function submitReview(reviewData: any) {
   try {
-    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "https://safe-wander-backend.onrender.com";
     const response = await fetch(`${baseUrl}/submit-review`, {
       method: "POST",
       headers: {
@@ -23,7 +32,8 @@ export async function submitReview(reviewData: any) {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to submit review");
+      const errorText = await response.text();
+      throw new Error(`Failed to submit review: ${response.status} - ${errorText}`);
     }
 
     return response.json();

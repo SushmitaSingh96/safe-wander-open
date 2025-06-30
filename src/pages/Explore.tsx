@@ -11,20 +11,14 @@ const Explore = () => {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [dbPlaces, setDbPlaces] = useState<any[]>([])
 
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
-  const USE_FALLBACK_DATA = import.meta.env.VITE_USE_FALLBACK_DATA === 'true'
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://safe-wander-backend.onrender.com"
 
   useEffect(() => {
     const fetchReviews = async () => {
-      // If fallback mode is enabled, skip API call
-      if (USE_FALLBACK_DATA) {
-        console.log('Using fallback data mode - skipping API call')
-        return
-      }
-
       try {
+        console.log('Fetching reviews from:', BACKEND_URL)
         const response = await axios.get(`${BACKEND_URL}/reviews`, {
-          timeout: 5000 // 5 second timeout
+          timeout: 10000 // 10 second timeout for Render
         })
         const data = response.data
 
@@ -45,15 +39,17 @@ const Explore = () => {
           lastUpdated: new Date(review.created_at).toLocaleDateString(),
           coordinates: [35.6895 + index * 0.001, 139.6917 + index * 0.001] as [number, number]
         }))
+        
+        console.log('Fetched reviews:', reviews)
         setDbPlaces(reviews)
       } catch (error) {
-        console.warn('Backend not available, using fallback data:', error.message)
+        console.error('Error fetching reviews:', error)
         // Don't set error state, just continue with mock data
       }
     }
 
     fetchReviews()
-  }, [BACKEND_URL, USE_FALLBACK_DATA])
+  }, [BACKEND_URL])
 
   const categories = [
     { id: 'all', name: 'All Places' },
@@ -64,7 +60,8 @@ const Explore = () => {
     { id: 'shopping', name: 'Shopping' }
   ]
 
-  const places = [
+  // Only show mock places if no database places are available
+  const mockPlaces = dbPlaces.length === 0 ? [
     {
       id: 1,
       name: 'Blue Bottle Coffee',
@@ -88,33 +85,10 @@ const Explore = () => {
       tags: ['Female-only floors', '24/7 security', 'Central location'],
       lastUpdated: '5 hours ago',
       coordinates: [35.6896, 139.6917] as [number, number]
-    },
-    {
-      id: 3,
-      name: 'Senso-ji Temple',
-      category: 'Attraction',
-      location: 'Asakusa, Tokyo',
-      rating: 4.9,
-      safetyScore: 9.5,
-      image: 'https://images.pexels.com/photos/161401/fushimi-inari-taisha-shrine-kyoto-japan-temple-161401.jpeg?auto=compress&cs=tinysrgb&w=400',
-      tags: ['Well-patrolled', 'Tourist-friendly', 'Day visits recommended'],
-      lastUpdated: '1 day ago',
-      coordinates: [35.7148, 139.7967] as [number, number]
-    },
-    {
-      id: 4,
-      name: 'Starbucks Reserve Roastery',
-      category: 'Cafe',
-      location: 'Nakameguro, Tokyo',
-      rating: 4.7,
-      safetyScore: 9.0,
-      image: 'https://images.pexels.com/photos/1307698/pexels-photo-1307698.jpeg?auto=compress&cs=tinysrgb&w=400',
-      tags: ['Spacious', 'Good for meetings', 'Safe area'],
-      lastUpdated: '3 hours ago',
-      coordinates: [35.6434, 139.6982] as [number, number]
-    },
-    ...dbPlaces
-  ]
+    }
+  ] : []
+
+  const places = [...dbPlaces, ...mockPlaces]
 
   const filteredPlaces = places.filter(place => {
     const matchesSearch = place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -135,6 +109,11 @@ const Explore = () => {
         >
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Explore Safe Places</h1>
           <p className="text-xl text-gray-600">Discover verified safe spaces for women solo travelers</p>
+          {dbPlaces.length > 0 && (
+            <p className="text-sm text-green-600 mt-2">
+              Showing {dbPlaces.length} places from our database
+            </p>
+          )}
         </motion.div>
 
         {/* Search and Filters */}
